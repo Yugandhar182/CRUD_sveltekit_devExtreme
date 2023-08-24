@@ -76,7 +76,7 @@
             console.error("Failed to delete record.");
           }
         } catch (error) {
-          console.error("Failed to delete record:", error);
+          console.error("Failed to delete record", error);
         }
       },
       
