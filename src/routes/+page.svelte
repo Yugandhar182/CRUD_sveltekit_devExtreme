@@ -1,10 +1,7 @@
 <script>
     import { onMount } from "svelte";
    
-    
- 
-  
-    export let data;
+   export let data;
     const candidateData = data.candidatedata.data;
   
     // Prepare the grid data for dxDataGrid
@@ -29,37 +26,26 @@
       
 
         showBorders: true,
-
         filterRow: {
-
-            visible: true,
-
-        },
+        visible: true,
+       },
         
        
-
-
-paging: {
-
-pageSize: 10,
-
-},
+      paging: {
+      pageSize: 10,
+      },
 
 // pagination:true,
 
-pager: {
-
-showPageSizeSelector: true,
-
-allowedPageSizes: [ 10, 20],
-
-showInfo: true,
-
-},
-      });
-    });
-  </script>
-  
+      pager: {
+       showPageSizeSelector: true,
+       allowedPageSizes: [ 10, 20],
+       showInfo: true,
+      },
+            });
+          });
+        </script>
+        
   <main>
     <div id="dataGrid"></div>
   </main>
