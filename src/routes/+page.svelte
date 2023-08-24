@@ -1,71 +1,151 @@
 <script>
   import { onMount } from "svelte";
  
- export let data;
+
+
+
+  export let data;
   const candidateData = data.candidatedata.data;
 
-  // Prepare the grid data for dxDataGrid
   const gridData = candidateData.map(item => ({
-  
+    id: item.id,
     firstName: item.firstName,
-    surname:item.surname,
+    surname: item.surname,
     email: item.email,
-    phone: item.mobile,
-    // Define other properties as needed
+    mobile: item.mobile,
   }));
 
+  let dataGrid;
+
   onMount(() => {
-    var dataGrid = new DevExpress.ui.dxDataGrid("#dataGrid", {
+    dataGrid = new DevExpress.ui.dxDataGrid("#dataGrid", {
       dataSource: gridData,
       columns: [
-        { dataField: 'firstName', caption: 'firstName' },
-        { dataField: 'surname', caption: 'surname' },
+        { dataField: "id", caption: "ID", width: 300 },
+        { dataField: 'firstName', caption: 'FirstName' },
+        { dataField: 'surname', caption: 'Surname' },
         { dataField: 'email', caption: 'Email' },
-        { dataField: 'phone', caption: 'Mobile' },
-        // Define other columns as needed
+        { dataField: 'mobile', caption: 'Mobile' },
       ],
-    
-
       showBorders: true,
       filterRow: {
-      visible: true,
-     },
-     editing: {
-      allowDeleting: true,
-      allowAdding: true,
-      allowUpdating: true,
-      mode: "popup",
-      form: {
-        labelLocation: "top",
+        visible: true,
       },
-      popup: {
-        showTitle: true,
+      editing: {
+        allowDeleting: true,
+        allowAdding: true,
+        allowUpdating: true,
+        mode: "popup",
+        form: {
+          labelLocation: "top",
+        },
+        popup: {
+          showTitle: true,
+        },
+        texts: {
+          saveRowChanges: "Save",
+          cancelRowChanges: "Cancel",
+          deleteRow: "Delete",
+          confirmDeleteMessage: "Are you sure you want to delete this record?",
+        },
+      },
+      paging: {
+        pageSize: 10,
+      },
+      pager: {
+        showPageSizeSelector: true,
+        allowedPageSizes: [10, 20],
+        showInfo: true,
+      },
+      onRowRemoving: async (e) => {
+        console.log("Data being sent to API:", e.data);
+        try {
+          const response = await fetch(
+            `https://api.recruitly.io/api/candidate/${e.data.id}?apiKey=TEST27306FA00E70A0F94569923CD689CA9BE6CA`,
+            {
+              method: "DELETE",
+            }
+          );
+          if (response.ok) {
+            const removedItemIndex = gridData.findIndex((item) => item.id === e.key);
+            if (removedItemIndex > -1) {
+              gridData.splice(removedItemIndex, 1);
+              dataGrid.refresh();
+            }
+          } else {
+            console.error("Failed to delete record.");
+          }
+        } catch (error) {
+          console.error("Failed to delete record:", error);
+        }
+      },
       
+      onRowUpdating: async (e) => {
+        try {
+          console.log(e);
+          var newData = {
+            id: e.key.id,
+            firstName: e.newData.firstName === undefined ? e.oldData.firstName : e.newData.firstName,
+            surname: e.newData.surname === undefined ? e.oldData.surname : e.newData.surname,
+            email: e.newData.email === undefined ? e.oldData.email : e.newData.email,
+            mobile: e.newData.mobile === undefined ? e.oldData.mobile : e.newData.mobile,
+          }
+  
+          console.log(newData)
+          const response = await fetch(
+            `https://api.recruitly.io/api/candidate?apiKey=TEST9349C0221517DA4942E39B5DF18C68CDA154`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(newData),
+            }
+          );
+          const responseData = await response.json();
+          if (response.ok) {
+            const updatedItemIndex = gridData.findIndex((item) => item.id === e.key);
+            gridData.push(e.newData);
+            gridData[updatedItemIndex] = e.newData;
+            dataGrid.refresh();
+          } else {
+            console.error("Failed to update record:", responseData.error);
+          }
+        } catch (error) {
+          console.error("Failed to update record:", error);
+        }
       },
-      texts: {
-        saveRowChanges: "Save",
-        cancelRowChanges: "Cancel",
-        deleteRow: "Delete",
-        confirmDeleteMessage: "Are you sure you want to delete this record?",
-      },
-    },
       
-     
-    paging: {
-    pageSize: 10,
-    },
+      onRowInserting: async (e) => {
+        console.log("Data being sent to API:", e.data);
+        try {
+          const response = await fetch(
+            "https://api.recruitly.io/api/candidate?apiKey=TEST27306FA00E70A0F94569923CD689CA9BE6CA",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(e.data),
+            }
+          );
+  
+          const responseData = await response.json();
+          if (response.ok) {
+            e.data.firstName = responseData.firstName;
+            gridData.push(e.data);
+            dataGrid.refresh();
+          } else {
+            console.error("Failed to add record:", responseData.error);
+          }
+        } catch (error) {
+          console.error("Failed to add record:", error);
+        }
+      },
+    });
+  });
+</script>
 
-// pagination:true,
-
-    pager: {
-     showPageSizeSelector: true,
-     allowedPageSizes: [ 10, 20],
-     showInfo: true,
-    },
-          });
-        });
-      </script>
-      
 <main>
   <div id="dataGrid"></div>
 </main>
